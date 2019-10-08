@@ -210,8 +210,20 @@ class TributeEvents {
                 }
             },
             tab: (e, el) => {
-                // choose first match
-                this.callbacks().enter(e, el)
+                if (this.tribute.tabKeepsMenuOpen){
+                    if (this.tribute.isActive && this.tribute.current.filteredItems) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setTimeout(() => {
+                            this.tribute.selectItemAtIndex(this.tribute.menuSelected, e)
+
+                            tribute.showMenuFor(el, true)
+                        }, 0)
+                    }
+                } else {
+                    // choose first match
+                    this.callbacks().enter(e, el)
+                }
             },
             space: (e, el) => {
                 if (this.tribute.isActive) {
@@ -237,7 +249,7 @@ class TributeEvents {
                     if (count > selected && selected > 0) {
                         this.tribute.menuSelected--
                         this.setActiveLi()
-                    } else if (selected === 0) {
+                    } else if (selected === 0 && this.tribute.loopScrolling) {
                       this.tribute.menuSelected = count - 1
                       this.setActiveLi()
                       this.tribute.menu.scrollTop = this.tribute.menu.scrollHeight
@@ -255,7 +267,7 @@ class TributeEvents {
                     if (count > selected) {
                         this.tribute.menuSelected++
                         this.setActiveLi()
-                    } else if (count === selected) {
+                    } else if (count === selected && this.tribute.loopScrolling) {
                         this.tribute.menuSelected = 0
                         this.setActiveLi()
                         this.tribute.menu.scrollTop = 0

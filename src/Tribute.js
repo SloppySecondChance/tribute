@@ -25,6 +25,8 @@ class Tribute {
         spaceSelectsMatch = false,
         searchOpts = {},
         menuItemLimit = null,
+        tabKeepsMenuOpen = false,
+        loopScrolling = true,
     }) {
         this.autocompleteMode = autocompleteMode
         this.menuSelected = 0
@@ -37,6 +39,8 @@ class Tribute {
         this.positionMenu = positionMenu
         this.hasTrailingSpace = false;
         this.spaceSelectsMatch = spaceSelectsMatch;
+        this.tabKeepsMenuOpen = tabKeepsMenuOpen;
+        this.loopScrolling = loopScrolling;
 
         if (this.autocompleteMode) {
             trigger = ''

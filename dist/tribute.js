@@ -75,7 +75,11 @@ function () {
         _ref$searchOpts = _ref.searchOpts,
         searchOpts = _ref$searchOpts === void 0 ? {} : _ref$searchOpts,
         _ref$menuItemLimit = _ref.menuItemLimit,
-        menuItemLimit = _ref$menuItemLimit === void 0 ? null : _ref$menuItemLimit;
+        menuItemLimit = _ref$menuItemLimit === void 0 ? null : _ref$menuItemLimit,
+        _ref$tabKeepsMenuOpen = _ref.tabKeepsMenuOpen,
+        tabKeepsMenuOpen = _ref$tabKeepsMenuOpen === void 0 ? false : _ref$tabKeepsMenuOpen,
+        _ref$loopScrolling = _ref.loopScrolling,
+        loopScrolling = _ref$loopScrolling === void 0 ? true : _ref$loopScrolling;
 
     _classCallCheck(this, Tribute);
 
@@ -90,6 +94,8 @@ function () {
     this.positionMenu = positionMenu;
     this.hasTrailingSpace = false;
     this.spaceSelectsMatch = spaceSelectsMatch;
+    this.tabKeepsMenuOpen = tabKeepsMenuOpen;
+    this.loopScrolling = loopScrolling;
 
     if (this.autocompleteMode) {
       trigger = '';
@@ -741,8 +747,20 @@ function () {
           }
         },
         tab: function tab(e, el) {
-          // choose first match
-          _this.callbacks().enter(e, el);
+          if (_this.tribute.tabKeepsMenuOpen) {
+            if (_this.tribute.isActive && _this.tribute.current.filteredItems) {
+              e.preventDefault();
+              e.stopPropagation();
+              setTimeout(function () {
+                _this.tribute.selectItemAtIndex(_this.tribute.menuSelected, e);
+
+                tribute.showMenuFor(el, true);
+              }, 0);
+            }
+          } else {
+            // choose first match
+            _this.callbacks().enter(e, el);
+          }
         },
         space: function space(e, el) {
           if (_this.tribute.isActive) {
@@ -770,7 +788,7 @@ function () {
               _this.tribute.menuSelected--;
 
               _this.setActiveLi();
-            } else if (selected === 0) {
+            } else if (selected === 0 && _this.tribute.loopScrolling) {
               _this.tribute.menuSelected = count - 1;
 
               _this.setActiveLi();
@@ -791,7 +809,7 @@ function () {
               _this.tribute.menuSelected++;
 
               _this.setActiveLi();
-            } else if (count === selected) {
+            } else if (count === selected && _this.tribute.loopScrolling) {
               _this.tribute.menuSelected = 0;
 
               _this.setActiveLi();
@@ -1130,9 +1148,19 @@ function () {
         if (!this.isContentEditable(context.element)) {
           var myField = this.tribute.current.element;
           var textSuffix = typeof this.tribute.replaceTextSuffix == 'string' ? this.tribute.replaceTextSuffix : ' ';
+
+          if (this.tribute.tabKeepsMenuOpen && originalEvent.keyCode == 9) {
+            textSuffix = textSuffix + '@';
+          }
+
           text += textSuffix;
           var startPos = info.mentionPosition;
           var endPos = info.mentionPosition + info.mentionText.length + textSuffix.length;
+
+          if (!this.tribute.autocompleteMode) {
+            endPos += info.mentionTriggerChar.length - 1;
+          }
+
           myField.value = myField.value.substring(0, startPos) + text + myField.value.substring(endPos, myField.value.length);
           myField.selectionStart = startPos + text.length;
           myField.selectionEnd = startPos + text.length;
@@ -1140,8 +1168,19 @@ function () {
           // add a space to the end of the pasted text
           var _textSuffix = typeof this.tribute.replaceTextSuffix == 'string' ? this.tribute.replaceTextSuffix : '\xA0';
 
+          if (this.tribute.tabKeepsMenuOpen && originalEvent.keyCode == 9) {
+            _textSuffix = _textSuffix + '@';
+          }
+
           text += _textSuffix;
-          this.pasteHtml(text, info.mentionPosition, info.mentionPosition + info.mentionText.length + !this.tribute.autocompleteMode);
+
+          var _endPos = info.mentionPosition + info.mentionText.length;
+
+          if (!this.tribute.autocompleteMode) {
+            _endPos += info.mentionTriggerChar.length;
+          }
+
+          this.pasteHtml(text, info.mentionPosition, _endPos);
         }
 
         context.element.dispatchEvent(replaceEvent);
@@ -1320,8 +1359,8 @@ function () {
         });
 
         if (mostRecentTriggerCharPos >= 0 && (mostRecentTriggerCharPos === 0 || !requireLeadingSpace || /[\xA0\s]/g.test(effectiveRange.substring(mostRecentTriggerCharPos - 1, mostRecentTriggerCharPos)))) {
-          var currentTriggerSnippet = effectiveRange.substring(mostRecentTriggerCharPos + 1, effectiveRange.length);
-          triggerChar = effectiveRange.substring(mostRecentTriggerCharPos, mostRecentTriggerCharPos + 1);
+          var currentTriggerSnippet = effectiveRange.substring(mostRecentTriggerCharPos + triggerChar.length, effectiveRange.length);
+          triggerChar = effectiveRange.substring(mostRecentTriggerCharPos, mostRecentTriggerCharPos + triggerChar.length);
           var firstSnippetChar = currentTriggerSnippet.substring(0, 1);
           var leadingSpace = currentTriggerSnippet.length > 0 && (firstSnippetChar === ' ' || firstSnippetChar === '\xA0');
 
@@ -1347,14 +1386,21 @@ function () {
     }
   }, {
     key: "lastIndexWithLeadingSpace",
-    value: function lastIndexWithLeadingSpace(str, _char) {
+    value: function lastIndexWithLeadingSpace(str, trigger) {
       var reversedStr = str.split('').reverse().join('');
       var index = -1;
 
       for (var cidx = 0, len = str.length; cidx < len; cidx++) {
         var firstChar = cidx === str.length - 1;
         var leadingSpace = /\s/.test(reversedStr[cidx + 1]);
-        var match = _char === reversedStr[cidx];
+        var match = true;
+
+        for (var triggerIdx = trigger.length - 1; triggerIdx >= 0; triggerIdx--) {
+          if (trigger[triggerIdx] !== reversedStr[cidx - triggerIdx]) {
+            match = false;
+            break;
+          }
+        }
 
         if (match && (firstChar || leadingSpace)) {
           index = str.length - 1 - cidx;

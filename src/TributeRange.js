@@ -134,6 +134,9 @@ class TributeRange {
                 let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
                     ? this.tribute.replaceTextSuffix
                     : ' '
+                if (this.tribute.tabKeepsMenuOpen && originalEvent.keyCode == 9){
+                    textSuffix = textSuffix + '@'
+                }        
                 text += textSuffix
                 let startPos = info.mentionPosition
                 let endPos = info.mentionPosition + info.mentionText.length + textSuffix.length
@@ -149,6 +152,9 @@ class TributeRange {
                 let textSuffix = typeof this.tribute.replaceTextSuffix == 'string'
                     ? this.tribute.replaceTextSuffix
                     : '\xA0'
+                if (this.tribute.tabKeepsMenuOpen && originalEvent.keyCode == 9) {
+                    textSuffix = textSuffix + '@'
+                }
                 text += textSuffix
                 let endPos = info.mentionPosition + info.mentionText.length
                 if (!this.tribute.autocompleteMode) {
