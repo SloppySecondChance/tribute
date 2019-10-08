@@ -753,8 +753,6 @@ function () {
               e.stopPropagation();
               setTimeout(function () {
                 _this.tribute.selectItemAtIndex(_this.tribute.menuSelected, e);
-
-                tribute.showMenuFor(el, true);
               }, 0);
             }
           } else {

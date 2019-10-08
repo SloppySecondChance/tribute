@@ -216,8 +216,6 @@ class TributeEvents {
                         e.stopPropagation()
                         setTimeout(() => {
                             this.tribute.selectItemAtIndex(this.tribute.menuSelected, e)
-
-                            tribute.showMenuFor(el, true)
                         }, 0)
                     }
                 } else {
